@@ -1,0 +1,629 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}Generador de Videos IA{% endblock %}
+
+{% block content %}
+<div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+<h1 class="text-center mb-5">Clipgen.ai</h1>
+<div class="minutes-info">
+    <strong>Minutos restantes:</strong> {{ minutes_left }} min |
+    <strong>Fecha de vencimiento:</strong> {{ reset_date|date:"d M Y" }}
+    <button class="btn-upgrade" onclick="showUpgradePanel()">Upgrade</button>
+    {% if current_plan_name %}
+        <strong>Plan Actual:</strong> {{ current_plan_name }}
+        <!-- solo aparece el botón si hay plan actual -->
+        <button class="btn-cancel" onclick="showCancelPanel()">Cancelar Plan</button>
+    {% else %}
+        <strong>Plan Actual: Free</strong>
+    {% endif %}
+
+    
+</div>
+
+
+
+
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="generate-script-tab" data-bs-toggle="tab" data-bs-target="#generate-script" type="button" role="tab" aria-controls="generate-script" aria-selected="true">Generar Guion</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="upload-script-tab" data-bs-toggle="tab" data-bs-target="#upload-script" type="button" role="tab" aria-controls="upload-script" aria-selected="false">Ingresar Guion</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="your-videos-tab" data-bs-toggle="tab" data-bs-target="#your-videos" type="button" role="tab" aria-controls="your-videos" aria-selected="false">Tus Videos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config" type="button" role="tab" aria-controls="config" aria-selected="false">Configuración</button>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+
+<!-- Panel oculto al inicio -->
+<div id="upgradePanel" class="panel-upgrade" style="display: none;">
+    <div class="panel-upgrade-content">
+      <h2>Selecciona tu Plan</h2>
+      <div id="plansContainer"></div>
+      <button class="btn-upgrade" onclick="hideUpgradePanel()">Cerrar</button>
+    </div>
+</div>
+  
+<div id="cancelPanel" class="panel-cancel" style="display: none;">
+    <div class="panel-cancel-content">
+      <h2>¿Cancelar Suscripción?</h2>
+      <p>¿Estás seguro de que deseas cancelar tu plan actual?</p>
+      <button class="btn-confirm" onclick="confirmCancelPlan()">Sí, cancelar</button>
+      <button class="btn-secondary" onclick="hideCancelPanel()">No, volver</button>
+    </div>
+</div>
+    
+    <div class="tab-pane fade show active" id="generate-script" role="tabpanel" aria-labelledby="generate-script-tab">
+        <form id="generateForm">
+            <div class="mb-3">
+                <label for="inputTitle" class="form-label">Título del Video</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="inputTitle" placeholder="Introduce un título">
+                    <button class="btn btn-outline-secondary" type="button" onclick="suggestTitles()">
+                        <svg height="24" width="24" fill="#FFFFFF" viewBox="0 0 24 24" data-name="Layer 1" id="Layer_1" class="sparkle">
+                            <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5ZM19.333,4.667,20.5,7l1.167-2.333L24,3.5,21.667,2.333,20.5,0,19.333,2.333,17,3.5Z"></path>
+                        </svg>
+                        <span class="text">Sugerir Títulos</span>
+                    </button>
+                </div>
+                <div id="titleSuggestions" class="mt-2"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="videoCount" class="form-label">Número de Videos a Generar</label>
+                <select class="form-select" id="videoCount">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="inputVoiceType" class="form-label">Tipo de Voz</label>
+                    <select class="form-select" id="inputVoiceType">
+                        <option value="openai">OpenAI</option>
+                        <option value="elevenlabs">ElevenLabs</option>
+                        <option value="clipgenvoices">ClipgenVoices</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="inputLanguage" class="form-label">Idioma</label>
+                    <select class="form-select" id="inputLanguage">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="fr">Francés</option>
+                        <option value="de">Alemán</option>
+                        <option value="it">Italiano</option>
+                        <option value="pt">Portugués</option>
+                        <option value="ru">Ruso</option>
+                        <option value="zh">Chino</option>
+                        <option value="ja">Japonés</option>
+                        <option value="ko">Coreano</option>
+                        <option value="ar">Árabe</option>
+                        <option value="hi">Hindi</option>
+                        <option value="tr">Turco</option>
+                        <option value="nl">Neerlandés</option>
+                        <option value="sv">Sueco</option>
+                        <option value="pl">Polaco</option>
+                        <option value="da">Danés</option>
+                        <option value="fi">Finés</option>
+                        <option value="no">Noruego</option>
+                        <option value="el">Griego</option>
+                        <option value="he">Hebreo</option>
+                        <option value="hu">Húngaro</option>
+                        <option value="cs">Checo</option>
+                        <option value="ro">Rumano</option>
+                        <option value="bg">Búlgaro</option>
+                        <option value="uk">Ucraniano</option>
+                        <option value="vi">Vietnamita</option>
+                        <option value="th">Tailandés</option>
+                        <option value="ms">Malayo</option>
+                        <option value="id">Indonesio</option>
+                        <option value="tl">Tagalo</option>
+                        <option value="bn">Bengalí</option>
+                        <option value="fa">Persa</option>
+                        <option value="ur">Urdu</option>
+                        <option value="et">Estonio</option>
+                        <option value="lv">Letón</option>
+                        <option value="lt">Lituano</option>
+                        <option value="sk">Eslovaco</option>
+                        <option value="sl">Esloveno</option>
+                        <option value="sr">Serbio</option>
+                        <option value="hr">Croata</option>
+                        <option value="mk">Macedonio</option>
+                        <option value="is">Islandés</option>
+                        <option value="mt">Maltés</option>
+                        <option value="cy">Galés</option>
+                        <option value="ga">Irlandés</option>
+                        <option value="af">Afrikáans</option>
+                        <option value="sw">Suajili</option>
+                        <option value="yo">Yoruba</option>
+                        <option value="zu">Zulú</option>
+                        <option value="am">Amárico</option>
+                        <option value="tg">Tayiko</option>
+                        <option value="ky">Kirguís</option>
+                        <option value="uz">Uzbeko</option>
+                        <option value="kk">Kazajo</option>
+                        <option value="mn">Mongol</option>
+                        <option value="ne">Nepalí</option>
+                        <option value="si">Cingalés</option>
+                        <option value="te">Telugu</option>
+                        <option value="ta">Tamil</option>
+                        <option value="kn">Canarés</option>
+                        <option value="ml">Malayalam</option>
+                        <option value="mr">Maratí</option>
+                        <option value="gu">Guyaratí</option>
+                        <option value="pa">Panyabí</option>
+                        <option value="my">Birmano</option>
+                        <option value="km">Camboyano</option>
+                        <option value="lo">Lao</option>
+                        <option value="hy">Armenio</option>
+                        <option value="ka">Georgiano</option>
+                        <option value="az">Azerí</option>
+                        <option value="sq">Albanés</option>
+                        <option value="bs">Bosnio</option>
+                        <option value="eu">Euskera</option>
+                        <option value="gl">Gallego</option>
+                        <option value="ca">Catalán</option>
+                    </select>
+                </div>                
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="inputVoice" class="form-label">Voz</label>
+                    <select class="form-select" id="inputVoice">
+                        <option value="nova">Nova</option>
+                        <option value="shimmer">Shimmer</option>
+                        <option value="echo">Echo</option>
+                        <option value="onyx">Onyx</option>
+                        <option value="fable">Fable</option>
+                        <option value="alloy">Alloy</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="subtitleOption" class="form-label">¿Agregar Subtítulos?</label>
+                    <select class="form-select" id="subtitleOption">
+                        <option value="yes">Activados</option>
+                        <option value="no">Desactivados</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="videoDuration" class="form-label">Duración del Video</label>
+                    <select class="form-select" id="videoDuration">
+                        <option value="menos de 1 minuto">Menos de 1 minuto</option>
+                        <option value="2 minutos">1-2 minutos</option>
+                        <option value="10 minutos">5-10 minutos</option>
+                        <option value="20 minutos">15-20 minutos</option>
+                        <!--
+                        <option value="30 minutos">20-30 minutos</option>
+                        <option value="40 minutos">Más de 30 minutos</option>
+                        --> 
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="subtitlePosition" class="form-label">Posición de los Subtítulos</label>
+                    <select class="form-select" id="subtitlePosition">
+                        <option value="bottom">Inferior</option>
+                        <option value="top">Superior</option>
+                        <option value="center">Centro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="musicOption" class="form-label">Música</label>
+                    <select class="form-select" id="musicOption">
+                        <option value="no_music">Sin Música</option>
+                        <option value="with_music">Con Música</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="contentOption" class="form-label">Tipo de Contenido</label>
+                    <select class="form-select" id="contentOption">
+                        <option value="mixto">Mixto</option>
+                        <option value="imagenes">Solo Imágenes</option>
+                        <option value="videos">Solo Videos</option>
+                        <option value="personal">Carpeta Personal</option>
+                        <option value="google">Google solo imágenes</option>
+                    </select>
+                </div>                
+                <div class="mb-3">
+                    <label for="referenceLink" class="form-label">Ingresa un link de referencia</label>
+                    <input type="text" class="form-control" id="referenceLink" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                
+            </div>
+            <div class="row" id="personalFolderSection" style="display:none;">
+                <div class="col-md-6 mb-3">
+                    <label for="personalFolder" class="form-label">Seleccionar Carpeta Personal</label>
+                    <input type="file" id="personalFolder" webkitdirectory directory multiple class="form-control">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="videoOrientation" class="form-label">Orientación del Video</label>
+                <select class="form-select" id="videoOrientation" style="width: auto;">
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                </select>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-custom" onclick="generateScript()">
+                    <strong>Generar Guion</strong>
+                    <div id="container-stars">
+                        <div id="stars"></div>
+                    </div>
+                    <div id="glow">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="upload-script" role="tabpanel" aria-labelledby="upload-script-tab">
+        <form id="uploadForm">
+            <div class="mb-3">
+                <label for="inputManualTitle" class="form-label">Título del Video</label>
+                <input type="text" class="form-control" id="inputManualTitle" placeholder="Introduce un título">
+            </div>
+            <div class="mb-3">
+                <label for="inputManualScript" class="form-label">Guion del Video</label>
+                <textarea class="form-control" id="inputManualScript" rows="10" placeholder="Introduce el guion"></textarea>
+            </div>
+                <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="inputLanguageManual" class="form-label">Idioma</label>
+                    <select class="form-select" id="inputLanguageManual">
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="fr">Francés</option>
+                        <option value="de">Alemán</option>
+                        <option value="it">Italiano</option>
+                        <option value="pt">Portugués</option>
+                        <option value="ru">Ruso</option>
+                        <option value="zh">Chino</option>
+                        <option value="ja">Japonés</option>
+                        <option value="ko">Coreano</option>
+                        <option value="ar">Árabe</option>
+                        <option value="hi">Hindi</option>
+                        <option value="tr">Turco</option>
+                        <option value="nl">Neerlandés</option>
+                        <option value="sv">Sueco</option>
+                        <option value="pl">Polaco</option>
+                        <option value="da">Danés</option>
+                        <option value="fi">Finés</option>
+                        <option value="no">Noruego</option>
+                        <option value="el">Griego</option>
+                        <option value="he">Hebreo</option>
+                        <option value="hu">Húngaro</option>
+                        <option value="cs">Checo</option>
+                        <option value="ro">Rumano</option>
+                        <option value="bg">Búlgaro</option>
+                        <option value="uk">Ucraniano</option>
+                        <option value="vi">Vietnamita</option>
+                        <option value="th">Tailandés</option>
+                        <option value="ms">Malayo</option>
+                        <option value="id">Indonesio</option>
+                        <option value="tl">Tagalo</option>
+                        <option value="bn">Bengalí</option>
+                        <option value="fa">Persa</option>
+                        <option value="ur">Urdu</option>
+                        <option value="et">Estonio</option>
+                        <option value="lv">Letón</option>
+                        <option value="lt">Lituano</option>
+                        <option value="sk">Eslovaco</option>
+                        <option value="sl">Esloveno</option>
+                        <option value="sr">Serbio</option>
+                        <option value="hr">Croata</option>
+                        <option value="mk">Macedonio</option>
+                        <option value="is">Islandés</option>
+                        <option value="mt">Maltés</option>
+                        <option value="cy">Galés</option>
+                        <option value="ga">Irlandés</option>
+                        <option value="af">Afrikáans</option>
+                        <option value="sw">Suajili</option>
+                        <option value="yo">Yoruba</option>
+                        <option value="zu">Zulú</option>
+                        <option value="am">Amárico</option>
+                        <option value="tg">Tayiko</option>
+                        <option value="ky">Kirguís</option>
+                        <option value="uz">Uzbeko</option>
+                        <option value="kk">Kazajo</option>
+                        <option value="mn">Mongol</option>
+                        <option value="ne">Nepalí</option>
+                        <option value="si">Cingalés</option>
+                        <option value="te">Telugu</option>
+                        <option value="ta">Tamil</option>
+                        <option value="kn">Canarés</option>
+                        <option value="ml">Malayalam</option>
+                        <option value="mr">Maratí</option>
+                        <option value="gu">Guyaratí</option>
+                        <option value="pa">Panyabí</option>
+                        <option value="my">Birmano</option>
+                        <option value="km">Camboyano</option>
+                        <option value="lo">Lao</option>
+                        <option value="hy">Armenio</option>
+                        <option value="ka">Georgiano</option>
+                        <option value="az">Azerí</option>
+                        <option value="sq">Albanés</option>
+                        <option value="bs">Bosnio</option>
+                        <option value="eu">Euskera</option>
+                        <option value="gl">Gallego</option>
+                        <option value="ca">Catalán</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="inputVoiceTypeManual" class="form-label">Tipo de Voz</label>
+                    <select class="form-select" id="inputVoiceTypeManual">
+                        <option value="openai">OpenAI</option>
+                        <option value="elevenlabs">ElevenLabs</option>
+                        <option value="clipgenvoices">ClipGenVoices</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="inputVoiceManual" class="form-label">Voz</label>
+                    <select class="form-select" id="inputVoiceManual">
+                        <option value="nova">Nova</option>
+                        <option value="shimmer">Shimmer</option>
+                        <option value="echo">Echo</option>
+                        <option value="onyx">Onyx</option>
+                        <option value="fable">Fable</option>
+                        <option value="alloy">Alloy</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="subtitleOptionManual" class="form-label">¿Agregar Subtítulos?</label>
+                    <select class="form-select" id="subtitleOptionManual">
+                        <option value="yes">Activados</option>
+                        <option value="no">Desactivados</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="subtitlePositionManual" class="form-label">Posición de los Subtítulos</label>
+                    <select class="form-select" id="subtitlePositionManual">
+                        <option value="bottom">Inferior</option>
+                        <option value="top">Superior</option>
+                        <option value="center">Centro</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="musicOptionManual" class="form-label">Música</label>
+                    <select class="form-select" id="musicOptionManual">
+                        <option value="no_music">Sin Música</option>
+                        <option value="with_music">Con Música</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="contentOptionManual" class="form-label">Tipo de Contenido</label>
+                    <select class="form-select" id="contentOptionManual">
+                        <option value="mixto">Mixto</option>
+                        <option value="imagenes">Solo Imágenes</option>
+                        <option value="videos">Solo Videos</option>
+                        <option value="personal">Carpeta Personal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row" id="personalFolderSectionManual" style="display:none;">
+                <div class="col-md-6 mb-3">
+                    <label for="personalFolderManual" class="form-label">Seleccionar Carpeta Personal</label>
+                    <input type="file" id="personalFolderManual" webkitdirectory directory multiple class="form-control">
+                </div>
+            </div>
+    
+            <div class="mb-3">
+                <label for="videoOrientationManual" class="form-label">Orientación del Video</label>
+                <select class="form-select" id="videoOrientationManual">
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                </select>
+            </div>
+    
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-custom" onclick="acceptManualScript()">
+                    <strong>Aceptar</strong>
+                    <div id="container-stars">
+                        <div id="stars"></div>
+                    </div>
+                    <div id="glow">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="tab-pane fade" id="your-videos" role="tabpanel" aria-labelledby="your-videos-tab">
+        <h3>Tus Videos</h3>
+        <div id="videosList">
+            <h3>Tareas en Progreso</h3>
+            <div id="inProgressTasks">
+            </div>
+            <h3>Videos Almacenados</h3>
+            <div id="existingVideos">
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="config" role="tabpanel" aria-labelledby="config-tab">
+        <form id="configForm" method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="chatgptApiKey" class="form-label">ChatGPT API Key</label>
+                <input type="text" class="form-control" id="chatgptApiKey" placeholder="Introduce tu clave API de ChatGPT">
+            </div>
+            <div class="mb-3">
+                <label for="elevenlabsApiKey" class="form-label">ElevenLabs API Key</label>
+                <input type="text" class="form-control" id="elevenlabsApiKey" placeholder="Introduce tu clave API de ElevenLabs">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-custom" onclick="saveApiKeys()">
+                    <strong>Guardar</strong>
+                    <div id="container-stars">
+                        <div id="stars"></div>
+                    </div>
+                    <div id="glow">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+        <form id="changeCredentialsForm" class="mt-4">
+            <div class="mb-3">
+                <label for="newUsername" class="form-label">Nuevo Usuario</label>
+                <input type="text" class="form-control" id="newUsername" placeholder="Introduce tu nuevo nombre de usuario">
+            </div>
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Contraseña Actual</label>
+                <input type="password" class="form-control" id="currentPassword" placeholder="Introduce tu contraseña actual">
+            </div>
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                <input type="password" class="form-control" id="newPassword" placeholder="Introduce tu nueva contraseña">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-custom" onclick="changeCredentials()">
+                    <strong>Guardar</strong>
+                    <div id="container-stars">
+                        <div id="stars"></div>
+                    </div>
+                    <div id="glow">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="scriptSection" class="mt-5 d-none">
+    <h2>Guion Generado</h2>
+    <textarea id="generatedScript" class="form-control" rows="10"></textarea>
+    <div class="d-grid gap-2 mt-3">
+        <button class="btn btn-custom" onclick="acceptScript()">
+            <strong>Aceptar</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+        <button class="btn btn-custom" onclick="generateScript()">
+            <strong>Reintentar</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+    </div>
+</div>
+<div id="imagesSection" class="mt-5 d-none">
+    <h2>Imágenes Generadas</h2>
+    <div class="row" id="generatedImages"></div>
+    <div class="d-grid gap-2 mt-3">
+        <input type="file" id="uploadImage" accept="image/jpeg,image/png,image/webp" multiple class="form-control" style="display: none;">
+        <button class="btn btn-custom" onclick="document.getElementById('uploadImage').click()">
+            <strong>Agregar Imagen</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+        <button class="btn btn-custom" type="button" onclick="generateVideo()">
+            <strong>Generar Video</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+    </div>
+</div>
+<div id="videoSection" class="mt-5 d-none">
+    <h2>Video Generado</h2>
+    <video id="generatedVideo" controls class="w-100"></video>
+    <div class="d-grid gap-2 mt-3">
+        <button class="btn btn-custom" onclick="repeatVideo()">
+            <strong>Repetir Video</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+        <button class="btn btn-custom" onclick="saveVideo()">
+            <strong>Guardar</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+        <button class="btn btn-custom" onclick="generateScript()">
+            <strong>Hacer Otro</strong>
+            <div id="container-stars">
+                <div id="stars"></div>
+            </div>
+            <div id="glow">
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </button>
+    </div>
+</div>
+<div class="center-body" id="loading">
+    <div class="loader-circle-9">
+        Cargando
+        <span></span>
+    </div>
+</div>
+<div class="chatbot-container" id="chatbotContainer">
+    <div class="chatbot-header">Asistente Virtual</div>
+    <div class="chatbot-questions" id="chatbotQuestions">
+        <button class="btn btn-outline-primary" onclick="handleQuestion('¿Cómo usar la aplicación?')">¿Cómo usar la aplicación?</button>
+        <button class="btn btn-outline-primary" onclick="handleQuestion('Problemas con API')">Problemas con API</button>
+        <button class="btn btn-outline-primary" onclick="handleQuestion('Soporte')">Soporte</button>
+    </div>
+    <div class="chatbot-messages" id="chatbotMessages"></div>
+    <div class="chatbot-input">
+        <input type="text" id="chatbotInput" placeholder="Escribe un mensaje...">
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+</div>
+<button class="chatbot-toggle" id="chatbotToggle" onclick="toggleChatbot()">
+    <img src="{% static 'img/clipgen.ai logo.png' %}" alt="Chat Icon" width="30" height="30">
+</button>
+{% endblock %}

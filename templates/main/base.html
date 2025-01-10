@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Clipgen.ai{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'main/css/styles.css' %}" rel="stylesheet">
+    <link href="{% static 'main/css/descargar_eliminar.css' %}" rel="stylesheet">
+    <link href="{% static 'main/css/login.css' %}" rel="stylesheet">
+    <link href="{% static 'main/css/register.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --background-image-url: url("{% static 'img/back.webp' %}");
+        }
+    </style>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'img/clipgen.ai logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
+                Automatiza tus videos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'index' %}">Crea Contenido</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sobre' %}">Sobre Clipgen.ai</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Cerrar Sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'sobre' %}">Sobre Clipgen.ai</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Iniciar Sesión</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% block container %}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'main/js/scripts.js' %}"></script>
+    <script src="{% static 'main/js/chatbot.js' %}"></script>
+    <script src="{% static 'main/js/tab_management.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', function () {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

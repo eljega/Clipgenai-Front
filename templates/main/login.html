@@ -1,0 +1,24 @@
+<!-- login.html -->
+{% extends "main/base.html" %}
+{% load static %}
+{% block title %}Login{% endblock %}
+
+{% block container %}
+    <div class="login-container">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="input-container">
+                <div class="input-content">
+                    <div class="input-dist">
+                        <div class="input-type">
+                            <input class="input-is" type="email" required="" placeholder="Correo" name="email" />
+                            <input class="input-is" type="password" required="" placeholder="Contraseña" name="password" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="submit-button" type="submit">Iniciar Sesión</button>
+        </form>
+        <a href="{% url 'register' %}">¿No tienes cuenta? Regístrate aquí</a>
+    </div>
+{% endblock %}
